@@ -22,7 +22,9 @@ packs = c("BiocManager",
           "riboWaltz",
           "data.table",
           "ggpubr",
-          "BSgenome")
+          "BSgenome",
+          "ggtext",
+          "svglite")
 
 p_load(char = packs)
 

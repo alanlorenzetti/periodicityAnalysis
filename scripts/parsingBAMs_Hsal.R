@@ -74,15 +74,19 @@ readSizeDistPlot = HsalTib %>%
   geom_line() +
   scale_x_continuous(breaks = seq(14, 40),
                      limits = c(14, 40)) +
-  xlab("Read length") +
-  ylab("Fraction of total") +
-  scale_color_manual(name = "Time point",
+  xlab("Tamanho da *read*") +
+  ylab("Fração do total") +
+  scale_color_manual(name = "Ponto de Coleta",
                      values = c("TP1" = "#E15759",
                                 "TP2" = "#F28E2B",
                                 "TP3" = "#4E79A7",
                                 "TP4" = "#59A14F")) +
-  theme_pubr()
+  theme(axis.title.x = element_markdown(),
+        axis.title.y = element_markdown(),
+        legend.position = "bottom")
 
 ggsave(filename = "~/riboseq/periodicityAnalysis/plots/readSizeDistHsal.png",
        plot = readSizeDistPlot,
-       dpi = "print")
+       dpi = "print",
+       width = 7,
+       height = 4)

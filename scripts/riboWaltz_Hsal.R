@@ -104,12 +104,12 @@ tp1metahm = metaheatmap_psite(data = comparison_list,
                               utr5l = 18,
                               cdsl = 75,
                               utr3l = 3,
-                              log_colour = F)$plot
+                              log_colour = F)$plot +
+  theme_bw() +
+  theme(legend.position = "bottom")
 
 # plotting
-tp1metahm %>%
-  ggpar(p = ., 
-        legend = "top",
-        font.legend = c(12, "plain", "black")) %>% 
-  ggsave(plot = .,
-         filename = "~/riboseq/periodicityAnalysis/plots/tp1MeatHeatMap.png")
+svg(file = "~/riboseq/periodicityAnalysis/plots/tp1MeatHeatMap.svg",
+    width = 7, height = 4)
+tp1metahm
+dev.off()
