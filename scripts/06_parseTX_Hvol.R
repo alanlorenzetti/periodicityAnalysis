@@ -6,29 +6,46 @@
 # in riboWaltz
 
 # loading libs #####
-source("scripts/loadingLibs.R")
+source("scripts/01_loadingLibs.R")
 
 # loading files and starting processing ####
-# loading halo annot
-annot = rtracklayer::import("data/Hsalinarum/Hsalinarum-gene-annotation-pfeiffer2019.gff") %>%
+# loading hvol annot
+annot = rtracklayer::import("data/Hvolcanii/Hvolcanii.gff") %>%
   as_tibble() %>% 
-  filter(type == "CDS") %>% 
+  filter(type == "gene" & gene_biotype == "protein_coding") %>% 
   mutate(strand = strand %>% as.character(),
          startPos = case_when(strand == "+" ~ start,
                               TRUE ~ end),
          startPos = startPos %>% as.integer())
 
-# loading halo UTRs
-utr = read_tsv("./data/Hsalinarum/5UTR.txt") %>% 
-  dplyr::rename(utrLength = "length")
+# loading hvol UTRs from babski 2016
+# supplemental table 1
+# replicon names were added for manual
+# inspection, but they are not needed
+# for downstream analysis
+utr = read_tsv("./data/Hvolcanii/hvolUTR5.txt") %>% 
+  filter(!is.na(utrLength)) %>% 
+  filter(!is.na(locus_tag)) %>% 
+  mutate(replicon = case_when(replicon == "CHR" ~ "NC_013967.1",
+                              replicon == "pHV1" ~ "NC_013968.1",
+                              replicon == "pHV2" ~ "NC_013965.1",
+                              replicon == "pHV3" ~ "NC_013964.1",
+                              replicon == "pHV4" ~ "NC_013966.1")) %>% 
+  select(locus_tag,
+         utrLength)
+
+# quick and dirty removal of duplicates
+utr = utr[!utr$locus_tag %>% duplicated(),]
 
 # adding utr info to annot
-annot = left_join(annot, utr, by = "locus_tag")
+annot = left_join(annot, utr, by = c("old_locus_tag" = "locus_tag"))
 
 # creating transcript coordinates
 # using CDS and utrs
-# adding artificial 3nt utr3 so
-# riboWaltz could work properly
+# I am adding an artificial 3 prime utr
+# for all transcripts, since 
+# riboWaltz doesnt deal well with datases
+# lacking utrs
 annot = annot %>% 
   mutate(transcript = locus_tag,
          l_utr5 = case_when(is.na(utrLength) ~ 0,
@@ -45,6 +62,11 @@ annotAdj = annot %>%
          end = case_when(strand == "-" ~ end + l_utr5,
                          TRUE ~ as.numeric(end)))
 
+# gene HVO_RS01845 has to be removed
+# out of sequence boundaries 
+annotAdj = annotAdj[!(annotAdj$transcript == "HVO_RS01845"),]
+
+# creating iranges and granges objects
 annotIR = IRanges(start = annotAdj$start,
                   end = annotAdj$end,
                   names = annotAdj$locus_tag)
@@ -65,9 +87,19 @@ overlapsAnnot = GenomicRanges::findOverlaps(query = readsGR,
                                             minoverlap = 1L) %>% 
   as_tibble()
 
+# getting transcript fasta file
+hvolGenome = readDNAStringSet(filepath = "data/Hvolcanii/Hvolcanii.fa")
+names(hvolGenome) = names(hvolGenome) %>% sub(" .*", "", .)
+
+hvolTxSeqs = BSgenome::getSeq(hvolGenome, annotGR)
+
+writeXStringSet(x = hvolTxSeqs,
+                filepath = "data/Hvolcanii/hvolTxSeqs.fa",
+                format = "fasta")
+
 # adding annotAdj metadata cols
 # to reads dataset
-readsInCDS = HsalTib[overlapsAnnot$queryHits,]
+readsInCDS = tibFil[overlapsAnnot$queryHits,]
 readsInCDS$annotidx = overlapsAnnot$subjectHits
 
 annotAdj$annotidx = 1:dim(annotAdj)[1]
@@ -97,9 +129,10 @@ txList = annotAdj %>%
 
 # creating read list object
 readList = list()
-for(i in paste0("TP", 1:4)){
+treats = readsInCDS$treat %>% table() %>% names()
+for(i in treats){
   readList[[i]] = readsInCDS %>% 
-    filter(timepoint == i) %>% 
+    filter(treat == i) %>% 
     select(transcript,
            end5,
            end3,
@@ -108,5 +141,3 @@ for(i in paste0("TP", 1:4)){
            cds_stop) %>% 
     as.data.table()
 }
-# readList = list("TP2" = readList[["TP2"]])
-#

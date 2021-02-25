@@ -9,7 +9,7 @@
 # relative frequencies of read sizes
 
 # loading packs ########
-source("scripts/loadingLibs.R")
+source("scripts/01_loadingLibs.R")
 
 # processing ########
 # loading all BAM files into a list
@@ -59,6 +59,7 @@ readsGR = GenomicRanges::GRanges(seqnames = HsalTib$replicon,
                                  ranges = readsIR,
                                  strand = HsalTib$strand)
 readsGR$timepoint = HsalTib$timepoint
+readsGR$readName = HsalTib$readName
 
 # plotting distributions according to timepoint
 readSizeDistPlot = HsalTib %>%

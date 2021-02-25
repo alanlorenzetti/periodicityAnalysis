@@ -9,7 +9,7 @@
 # relative frequencies of read sizes
 
 # loading packs ########
-source("scripts/loadingLibs.R")
+source("scripts/01_loadingLibs.R")
 
 # processing ########
 # loading all BAM files into a list

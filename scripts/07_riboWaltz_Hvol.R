@@ -6,7 +6,7 @@
 # for Hvolcanni
 
 # loading libs #####
-source("scripts/loadingLibs.R")
+source("scripts/01_loadingLibs.R")
 
 # starting processing ####
 # filtering read sizes

@@ -5,7 +5,10 @@
 # analysis described by riboWaltz
 
 # loading libs #####
-source("scripts/loadingLibs.R")
+source("scripts/01_loadingLibs.R")
+
+# creating plots directory
+if(!dir.exists("plots")){dir.create("plots")}
 
 # starting processing ####
 # filtering read sizes
@@ -53,12 +56,12 @@ rends_heat(data = sizeFiltList,
 
 # trinucleotide periodicity
 frame_psite_length(data = sizeFiltListPsite,
-                   sample = "TP1",
+#                   sample = "TP2",
                    region = "cds")$plot
 
 # trinucleotide periodicity general
 frame_psite(data = sizeFiltListPsite,
-            sample = "TP1",
+#            sample = "TP2",
             region = c("all"))$plot
 
 # metaplots
@@ -66,10 +69,10 @@ frame_psite(data = sizeFiltListPsite,
 comparison_list = list()
 comparison_list[["all"]] = sizeFiltListPsite$TP2
 sample_list = list()
-sample_list[["all"]] = "all"
+sample_list[["Todos"]] = "all"
 for(i in sizeFiltListPsite$TP1$length %>%
     unique() %>% sort() %>% as.character()){
-  comparison_list[[i]] = sizeFiltListPsite$TP1 %>% 
+  comparison_list[[i]] = sizeFiltListPsite$TP2 %>% 
     filter(length == i %>% as.numeric())
   
   sample_list[[i]] = i
@@ -81,9 +84,9 @@ metaprofile_psite(data = sizeFiltListPsite,
                   annotation = txList,
                   length_range = 27,
                   frequency = F,
-                  sample = "TP1",
+                  sample = "TP2",
                   utr5l = 27,
-                  cdsl = 100,
+                  cdsl = 150,
                   utr3l = 3,
                   plot_title = NULL)$plot
 
@@ -93,23 +96,39 @@ metaprofile_psite(data = comparison_list,
                   sample = sample_list,
                   length_range = c(27,30),
                   utr5l = 27,
-                  cdsl = 100,
+                  cdsl = 150,
                   utr3l = 3,
                   frequency = TRUE)$plot
 
 # metaheatmap
-tp1metahm = metaheatmap_psite(data = comparison_list,
+tp2metahm = metaheatmap_psite(data = comparison_list,
                               annotation = txList,
                               sample = sample_list,
                               utr5l = 18,
                               cdsl = 75,
                               utr3l = 3,
-                              log_colour = F)$plot +
+                              log_colour = F)
+
+tp2metahmplot = tp2metahm$plot +
+  facet_grid(. ~ reg, 
+             scales = "free",
+             switch = "x",
+             labeller = labeller(reg = c("Distance from start (nt)" = "Distância do início (nt)",
+                                         "Distance from stop (nt)" = "Distância do término (nt)"))) +
   theme_bw() +
-  theme(legend.position = "bottom")
+  scale_fill_gradient("Sinal Sítio-P", 
+                      low = "white",
+                      high = "black",
+                      na.value = "white") + 
+  theme(legend.position = "bottom",
+        legend.title = element_text())
+
+#ggplot_build(tp2metahm)
 
 # plotting
-svg(file = "~/riboseq/periodicityAnalysis/plots/tp1MeatHeatMap.svg",
-    width = 7, height = 4)
-tp1metahm
-dev.off()
+ggsave(file = "~/riboseq/periodicityAnalysis/plots/tp2MetaHeatMap.png",
+       plot = tp2metahmplot,
+       width = 7,
+       height = 4,
+       unit = "in",
+       dpi = 300)
