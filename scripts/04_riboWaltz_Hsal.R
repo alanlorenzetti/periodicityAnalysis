@@ -70,7 +70,7 @@ comparison_list = list()
 comparison_list[["all"]] = sizeFiltListPsite$TP2
 sample_list = list()
 sample_list[["Todos"]] = "all"
-for(i in sizeFiltListPsite$TP1$length %>%
+for(i in sizeFiltListPsite$TP2$length %>%
     unique() %>% sort() %>% as.character()){
   comparison_list[[i]] = sizeFiltListPsite$TP2 %>% 
     filter(length == i %>% as.numeric())
